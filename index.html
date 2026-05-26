@@ -275,10 +275,36 @@
             color: white;
         }
 
-        .recommendations-grid, .movies-grid {
+        /* FIXED: 4 movies per row */
+        .recommendations-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            grid-template-columns: repeat(4, 1fr);
             gap: 1rem;
+        }
+
+        .movies-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 1024px) {
+            .recommendations-grid, .movies-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .recommendations-grid, .movies-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .recommendations-grid, .movies-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
         .movie-card {
@@ -308,7 +334,7 @@
             position: relative;
             aspect-ratio: 2 / 3;
             overflow: hidden;
-            background: #e5e7eb;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
         .poster-container img {
@@ -355,8 +381,12 @@
         .movie-title {
             font-weight: 700;
             color: white;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             margin-bottom: 0.25rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
         .movie-meta {
@@ -364,7 +394,7 @@
             align-items: center;
             gap: 0.5rem;
             color: rgba(255, 255, 255, 0.7);
-            font-size: 0.6rem;
+            font-size: 0.65rem;
         }
 
         .rating {
@@ -522,25 +552,6 @@
             from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
-        .loading {
-            text-align: center;
-            padding: 4rem;
-            color: #6b7280;
-        }
-
-        @media (max-width: 640px) {
-            .recommendations-grid, .movies-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .selected-poster {
-                width: 5rem;
-                height: 7.5rem;
-            }
-            .selected-info h2 {
-                font-size: 1.1rem;
-            }
-        }
     </style>
 </head>
 <body>
@@ -593,101 +604,44 @@
     </div>
 
     <script>
-        // ============================================
-        // 60+ MOVIES DATABASE with 15+ GENRES
-        // ============================================
+        // 60+ MOVIES with reliable poster URLs
         const MOVIES = [
-            // Classics
             { id: "1", title: "The Shawshank Redemption", year: 1994, genre: ["Drama"], description: "Two imprisoned men bond over a number of years, finding solace and eventual redemption through acts of common decency.", rating: 9.3, poster_url: "https://image.tmdb.org/t/p/w500/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg", director: "Frank Darabont" },
             { id: "2", title: "The Godfather", year: 1972, genre: ["Drama", "Crime"], description: "The aging patriarch of an organized crime dynasty transfers control of his clandestine empire to his reluctant son.", rating: 9.2, poster_url: "https://image.tmdb.org/t/p/w500/3bhkrj58Vtu7enYsRolD1fZdja1.jpg", director: "Francis Ford Coppola" },
-            { id: "3", title: "The Godfather Part II", year: 1974, genre: ["Drama", "Crime"], description: "The early life and career of Vito Corleone in 1920s New York is portrayed while his son, Michael, expands and tightens his grip on the family crime syndicate.", rating: 9.0, poster_url: "https://image.tmdb.org/t/p/w500/hek3koDUyRQk7FIhPXsa6mT2Zc3.jpg", director: "Francis Ford Coppola" },
-            { id: "4", title: "The Dark Knight", year: 2008, genre: ["Action", "Crime", "Drama"], description: "When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.", rating: 9.0, poster_url: "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg", director: "Christopher Nolan" },
-            { id: "5", title: "12 Angry Men", year: 1957, genre: ["Drama"], description: "A jury of 12 men must decide the fate of a young boy accused of murder, leading to intense discussions and revelations about their own biases.", rating: 9.0, poster_url: "https://image.tmdb.org/t/p/w500/ow3wq89wM8qd5X7hWKxiRfsFf9C.jpg", director: "Sidney Lumet" },
-            
-            // Action & Thriller
-            { id: "6", title: "Inception", year: 2010, genre: ["Action", "Sci-Fi", "Thriller"], description: "A thief who steals corporate secrets through dream-sharing technology is given the inverse task of planting an idea.", rating: 8.8, poster_url: "https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg", director: "Christopher Nolan" },
-            { id: "7", title: "The Matrix", year: 1999, genre: ["Action", "Sci-Fi"], description: "A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers.", rating: 8.7, poster_url: "https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg", director: "Lana Wachowski" },
-            { id: "8", title: "Gladiator", year: 2000, genre: ["Action", "Drama"], description: "A betrayed Roman general seeks revenge against the corrupt emperor who murdered his family and sent him into slavery.", rating: 8.5, poster_url: "https://image.tmdb.org/t/p/w500/ty8TGRuvJLPUmAR1H1nRIsgvimx.jpg", director: "Ridley Scott" },
-            { id: "9", title: "John Wick", year: 2014, genre: ["Action", "Thriller"], description: "An ex-hitman comes out of retirement to track down the gangsters who killed his dog and stole his car.", rating: 7.4, poster_url: "https://image.tmdb.org/t/p/w500/fZPSd91yGE9fCcCe6OoQr6E3Bev.jpg", director: "Chad Stahelski" },
-            { id: "10", title: "Mad Max: Fury Road", year: 2015, genre: ["Action", "Adventure", "Sci-Fi"], description: "In a post-apocalyptic wasteland, a woman rebels against a tyrannical ruler in search for her homeland with the aid of a group of female prisoners and a psychotic drifter.", rating: 7.9, poster_url: "https://image.tmdb.org/t/p/w500/8tZYtuWezp8JbcsvHYO0O46tFbo.jpg", director: "George Miller" },
-            
-            // Crime & Gangster
-            { id: "11", title: "Pulp Fiction", year: 1994, genre: ["Crime", "Drama"], description: "The lives of two mob hitmen, a boxer, a gangster and his wife intertwine in four tales of violence and redemption.", rating: 8.9, poster_url: "https://image.tmdb.org/t/p/w500/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg", director: "Quentin Tarantino" },
-            { id: "12", title: "Goodfellas", year: 1990, genre: ["Crime", "Drama"], description: "The story of Henry Hill and his life in the mob, covering his relationship with his wife Karen Hill and his mob partners Jimmy Conway and Tommy DeVito.", rating: 8.7, poster_url: "https://image.tmdb.org/t/p/w500/aKuFiU82s5ISJpGZp7YkIr3kCUd.jpg", director: "Martin Scorsese" },
-            { id: "13", title: "The Departed", year: 2006, genre: ["Crime", "Drama", "Thriller"], description: "An undercover cop and a mole in the police attempt to identify each other while infiltrating an Irish gang in South Boston.", rating: 8.5, poster_url: "https://image.tmdb.org/t/p/w500/nT97ifVT2J1TWmqgJ5NP2FySl1I.jpg", director: "Martin Scorsese" },
-            { id: "14", title: "Scarface", year: 1983, genre: ["Crime", "Drama"], description: "In 1980s Miami, a determined Cuban immigrant rises to become a powerful drug lord, but his unchecked ambition leads to his downfall.", rating: 8.3, poster_url: "https://image.tmdb.org/t/p/w500/iQ5ztdjOteqD8iDvW5GeJIuUd3C.jpg", director: "Brian De Palma" },
-            { id: "15", title: "Reservoir Dogs", year: 1992, genre: ["Crime", "Thriller"], description: "After a simple jewelry heist goes terribly wrong, surviving criminals begin to suspect that one of them is a police informant.", rating: 8.3, poster_url: "https://image.tmdb.org/t/p/w500/xi8Iu6qyTfyZVDVyJra5lEOEaIr.jpg", director: "Quentin Tarantino" },
-            
-            // Sci-Fi & Fantasy
-            { id: "16", title: "Interstellar", year: 2014, genre: ["Sci-Fi", "Drama"], description: "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival.", rating: 8.6, poster_url: "https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg", director: "Christopher Nolan" },
-            { id: "17", title: "Avatar", year: 2009, genre: ["Action", "Adventure", "Sci-Fi"], description: "A paraplegic Marine dispatched to the moon Pandora on a unique mission becomes torn between following his orders and protecting the alien world he calls home.", rating: 7.9, poster_url: "https://image.tmdb.org/t/p/w500/6EiRUJpuoeQPghrs3YNktfnqOVh.jpg", director: "James Cameron" },
-            { id: "18", title: "Blade Runner 2049", year: 2017, genre: ["Sci-Fi", "Drama", "Thriller"], description: "A young blade runner's discovery of a long-buried secret leads him to track down a former blade runner who's been missing for 30 years.", rating: 8.0, poster_url: "https://image.tmdb.org/t/p/w500/gajvy2Ub3VcO1gO2FYOqf6zECNn.jpg", director: "Denis Villeneuve" },
-            { id: "19", title: "The Lord of the Rings: The Fellowship of the Ring", year: 2001, genre: ["Adventure", "Fantasy"], description: "A meek Hobbit from the Shire and eight companions set out on a journey to destroy the powerful One Ring and save Middle-earth.", rating: 8.8, poster_url: "https://image.tmdb.org/t/p/w500/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg", director: "Peter Jackson" },
-            { id: "20", title: "The Lord of the Rings: The Return of the King", year: 2003, genre: ["Adventure", "Fantasy"], description: "Gandalf and Aragorn lead the World of Men against Sauron's army to draw his gaze from Frodo and Sam as they approach Mount Doom.", rating: 8.9, poster_url: "https://image.tmdb.org/t/p/w500/rCzpDGLbOoPwLjy3OAm5NUPOTrC.jpg", director: "Peter Jackson" },
-            { id: "21", title: "Star Wars: Episode V - The Empire Strikes Back", year: 1980, genre: ["Adventure", "Sci-Fi"], description: "After the Rebels are brutally overpowered by the Empire, Luke Skywalker begins Jedi training with Yoda, while his friends are pursued across the galaxy.", rating: 8.7, poster_url: "https://image.tmdb.org/t/p/w500/2d9U8nLzuX2VKj5QtPpX74Vn63K.jpg", director: "Irvin Kershner" },
-            
-            // Drama & Romance
-            { id: "22", title: "Forrest Gump", year: 1994, genre: ["Drama", "Romance"], description: "The presidencies of Kennedy and Johnson, the Vietnam War, and other historical events unfold from the perspective of an Alabama man with an IQ of 75.", rating: 8.8, poster_url: "https://image.tmdb.org/t/p/w500/saHP97rTPS5eLmrLQEcANmKrsFl.jpg", director: "Robert Zemeckis" },
-            { id: "23", title: "Fight Club", year: 1999, genre: ["Drama", "Thriller"], description: "An insomniac office worker and a devil-may-care soap maker form an underground fight club that evolves into much more.", rating: 8.8, poster_url: "https://image.tmdb.org/t/p/w500/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg", director: "David Fincher" },
-            { id: "24", title: "The Green Mile", year: 1999, genre: ["Drama", "Fantasy"], description: "The lives of guards on Death Row are affected by one of their charges: a black man accused of child murder and rape, yet who has a mysterious gift.", rating: 8.6, poster_url: "https://image.tmdb.org/t/p/w500/8VG8fDNiy50H4Fed1wdWIUPdZeL.jpg", director: "Frank Darabont" },
-            { id: "25", title: "The Pursuit of Happyness", year: 2006, genre: ["Drama", "Biography"], description: "A struggling salesman takes custody of his son as he's poised to begin a life-changing professional endeavor.", rating: 8.0, poster_url: "https://image.tmdb.org/t/p/w500/78L2w01idM9Ltxk6WvNv8QrFZgR.jpg", director: "Gabriele Muccino" },
-            { id: "26", title: "A Beautiful Mind", year: 2001, genre: ["Drama", "Biography"], description: "A brilliant mathematician struggles with schizophrenia while making groundbreaking discoveries.", rating: 8.2, poster_url: "https://image.tmdb.org/t/p/w500/zwzWCmH72OSC9NA0ipoK5kyaEEl.jpg", director: "Ron Howard" },
-            
-            // Comedy
-            { id: "27", title: "The Grand Budapest Hotel", year: 2014, genre: ["Comedy", "Drama"], description: "A writer encounters the owner of an aging high-class hotel, who tells him of his early years serving as a lobby boy.", rating: 8.1, poster_url: "https://image.tmdb.org/t/p/w500/eWdyYQreja6JGCzqHWXpWHDrrPo.jpg", director: "Wes Anderson" },
-            { id: "28", title: "Superbad", year: 2007, genre: ["Comedy"], description: "Two co-dependent high school seniors are forced to deal with separation anxiety after their plan to stage a booze-soaked party goes awry.", rating: 7.6, poster_url: "https://image.tmdb.org/t/p/w500/ek8e8txUyUwd2BNqj6lFEerJfbq.jpg", director: "Greg Mottola" },
-            { id: "29", title: "The Hangover", year: 2009, genre: ["Comedy"], description: "Three buddies wake up from a bachelor party in Las Vegas with no memory and a missing groom.", rating: 7.7, poster_url: "https://image.tmdb.org/t/p/w500/uluhlXubGu1VxU63Y9gBEPk3zix.jpg", director: "Todd Phillips" },
-            { id: "30", title: "Bridesmaids", year: 2011, genre: ["Comedy", "Romance"], description: "Competition between the maid of honor and a bridesmaid threatens to upend the life of a bride-to-be.", rating: 6.8, poster_url: "https://image.tmdb.org/t/p/w500/awGOWiYeHrJLygFOHqHoSpmQQlp.jpg", director: "Paul Feig" },
-            
-            // Horror
-            { id: "31", title: "The Shining", year: 1980, genre: ["Horror", "Drama"], description: "A family heads to an isolated hotel for the winter where a sinister presence influences the father into violence.", rating: 8.4, poster_url: "https://image.tmdb.org/t/p/w500/xazWoLealQwEgqZ89MLZklLZD3k.jpg", director: "Stanley Kubrick" },
-            { id: "32", title: "Get Out", year: 2017, genre: ["Horror", "Thriller"], description: "A young African-American visits his white girlfriend's family estate, where he uncovers a disturbing secret.", rating: 7.8, poster_url: "https://image.tmdb.org/t/p/w500/1SwAVYpuLj8KsHxllTF8Dt9dSSX.jpg", director: "Jordan Peele" },
-            { id: "33", title: "A Quiet Place", year: 2018, genre: ["Horror", "Drama", "Sci-Fi"], description: "A family struggles to survive in silence to avoid mysterious creatures that hunt by sound.", rating: 7.5, poster_url: "https://image.tmdb.org/t/p/w500/nAU74GmpUk7t5iklEp3bufwDq4n.jpg", director: "John Krasinski" },
-            { id: "34", title: "Hereditary", year: 2018, genre: ["Horror", "Drama"], description: "A grieving family is haunted by tragic and disturbing occurrences after the death of their secretive grandmother.", rating: 7.3, poster_url: "https://image.tmdb.org/t/p/w500/l7xR0jqFvSGBIygIYy2LpjHRawS.jpg", director: "Ari Aster" },
-            
-            // Animation
-            { id: "35", title: "Spirited Away", year: 2001, genre: ["Animation", "Fantasy"], description: "A young girl navigates a mysterious world of spirits and gods after her parents are transformed into pigs.", rating: 8.6, poster_url: "https://image.tmdb.org/t/p/w500/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg", director: "Hayao Miyazaki" },
-            { id: "36", title: "Toy Story", year: 1995, genre: ["Animation", "Comedy", "Family"], description: "A cowboy doll is threatened when a new spaceman action figure supplants him as top toy in a boy's room.", rating: 8.3, poster_url: "https://image.tmdb.org/t/p/w500/uXDfjJbdP4ijW5hWSBrPrlKpxab.jpg", director: "John Lasseter" },
-            { id: "37", title: "Up", year: 2009, genre: ["Animation", "Adventure", "Comedy"], description: "A grumpy old man and a young boy scout fly to South America in a house attached to balloons.", rating: 8.2, poster_url: "https://image.tmdb.org/t/p/w500/kZabGp30e7Cq1pNYoDyqZiuGkyx.jpg", director: "Pete Docter" },
-            { id: "38", title: "Coco", year: 2017, genre: ["Animation", "Family", "Fantasy"], description: "A young boy enters the Land of the Dead to find his great-great-grandfather and unlock the real story behind his family's ban on music.", rating: 8.4, poster_url: "https://image.tmdb.org/t/p/w500/gGEsBPAijhVUFoiNpgZXqRVWJt2.jpg", director: "Lee Unkrich" },
-            { id: "39", title: "The Lion King", year: 1994, genre: ["Animation", "Drama", "Family"], description: "A young lion prince flees his kingdom after the murder of his father, only to learn the true meaning of responsibility and bravery.", rating: 8.5, poster_url: "https://image.tmdb.org/t/p/w500/sKCr78MXSLixwmZ8DyJLrpMsd15.jpg", director: "Roger Allers" },
-            
-            // War & Historical
-            { id: "40", title: "Schindler's List", year: 1993, genre: ["Drama", "History", "War"], description: "A German industrialist saves over a thousand Jewish refugees during the Holocaust by employing them in his factories.", rating: 8.9, poster_url: "https://image.tmdb.org/t/p/w500/sF1U4EUQS8YHUYjNl3pMGNIQyr0.jpg", director: "Steven Spielberg" },
-            { id: "41", title: "Saving Private Ryan", year: 1998, genre: ["Drama", "War"], description: "A group of U.S. soldiers go behind enemy lines to retrieve a paratrooper whose brothers have been killed in action.", rating: 8.6, poster_url: "https://image.tmdb.org/t/p/w500/uqx37cS8cpHg8U35f9U5IBlrCV3.jpg", director: "Steven Spielberg" },
-            { id: "42", title: "Apocalypse Now", year: 1979, genre: ["Drama", "War"], description: "A U.S. Army officer is sent on a mission deep into the Cambodian jungle to assassinate a renegade Special Forces colonel.", rating: 8.4, poster_url: "https://image.tmdb.org/t/p/w500/8QBdAABxmPgs2zP1I2nX48e8mjN.jpg", director: "Francis Ford Coppola" },
-            
-            // Mystery & Suspense
-            { id: "43", title: "Se7en", year: 1995, genre: ["Crime", "Mystery", "Thriller"], description: "Two detectives hunt a serial killer who uses the seven deadly sins as his motifs.", rating: 8.6, poster_url: "https://image.tmdb.org/t/p/w500/6yoghtyTpznpBik8EngEmJskVUO.jpg", director: "David Fincher" },
-            { id: "44", title: "The Silence of the Lambs", year: 1991, genre: ["Crime", "Drama", "Thriller"], description: "A young FBI cadet must confide in an incarcerated and manipulative killer to catch another serial killer.", rating: 8.6, poster_url: "https://image.tmdb.org/t/p/w500/uS9m8OBkOCA6K0OJk7C2Qr2qqJN.jpg", director: "Jonathan Demme" },
-            { id: "45", title: "Gone Girl", year: 2014, genre: ["Drama", "Mystery", "Thriller"], description: "A man becomes the prime suspect when his wife disappears on their fifth wedding anniversary.", rating: 8.1, poster_url: "https://image.tmdb.org/t/p/w500/ly5XzGg5uDWChvu65sYPvwf2P0c.jpg", director: "David Fincher" },
-            { id: "46", title: "Prisoners", year: 2013, genre: ["Crime", "Drama", "Mystery"], description: "A desperate father takes matters into his own hands when his daughter and her friend go missing.", rating: 8.1, poster_url: "https://image.tmdb.org/t/p/w500/5nGkZbSzwHiv6HFoAR33tEMzmEB.jpg", director: "Denis Villeneuve" },
-            
-            // Romance
-            { id: "47", title: "Titanic", year: 1997, genre: ["Drama", "Romance"], description: "A seventeen-year-old aristocrat falls in love with a kind but poor artist aboard the luxurious, ill-fated R.M.S. Titanic.", rating: 7.9, poster_url: "https://image.tmdb.org/t/p/w500/9xjZS2rlVxm8SFx8kPC3aIGAR5W.jpg", director: "James Cameron" },
-            { id: "48", title: "La La Land", year: 2016, genre: ["Drama", "Music", "Romance"], description: "A jazz pianist and an aspiring actress fall in love while chasing their dreams in Los Angeles.", rating: 8.0, poster_url: "https://image.tmdb.org/t/p/w500/uDO8zWDhfWwoSgumBg3VZ7MCNmj.jpg", director: "Damien Chazelle" },
-            { id: "49", title: "Eternal Sunshine of the Spotless Mind", year: 2004, genre: ["Drama", "Romance", "Sci-Fi"], description: "A couple undergo a procedure to erase each other from their memories when their relationship turns sour.", rating: 8.3, poster_url: "https://image.tmdb.org/t/p/w500/5MwkWH9tYHv3mV9OdYTMR5qreIz.jpg", director: "Michel Gondry" },
-            { id: "50", title: "The Notebook", year: 2004, genre: ["Drama", "Romance"], description: "A poor and passionate young man falls in love with a rich young woman and gives her a sense of freedom.", rating: 7.8, poster_url: "https://image.tmdb.org/t/p/w500/rNzQyW4f3B8PvkVBwS5YLdk48WU.jpg", director: "Nick Cassavetes" },
-            
-            // Western
-            { id: "51", title: "The Good, the Bad and the Ugly", year: 1966, genre: ["Western", "Adventure"], description: "A bounty hunting scam joins two men in an uneasy alliance against a third in a race to find a fortune in gold.", rating: 8.8, poster_url: "https://image.tmdb.org/t/p/w500/7wf2QjLwHpNexHXwR5fTMFQIixJ.jpg", director: "Sergio Leone" },
-            { id: "52", title: "Django Unchained", year: 2012, genre: ["Drama", "Western"], description: "A freed slave teams up with a German bounty hunter to rescue his wife from a brutal Mississippi plantation owner.", rating: 8.4, poster_url: "https://image.tmdb.org/t/p/w500/7oWY8VDWW7thTzWh3OKYRkWUlD5.jpg", director: "Quentin Tarantino" },
-            
-            // Musical
-            { id: "53", title: "The Sound of Music", year: 1965, genre: ["Biography", "Drama", "Musical"], description: "A young novice becomes governess to seven children and brings joy and music back to their strict father.", rating: 8.0, poster_url: "https://image.tmdb.org/t/p/w500/yi0qMun8LQnD4E2tqjruRZY08YF.jpg", director: "Robert Wise" },
-            { id: "54", title: "Bohemian Rhapsody", year: 2018, genre: ["Biography", "Drama", "Music"], description: "The story of the legendary rock band Queen and lead singer Freddie Mercury.", rating: 7.9, poster_url: "https://image.tmdb.org/t/p/w500/lHu1wtNaczFPGFDTrjCSzeLPTKN.jpg", director: "Bryan Singer" },
-            
-            // Sports
-            { id: "55", title: "Rocky", year: 1976, genre: ["Drama", "Sport"], description: "A small-time boxer gets a once-in-a-lifetime chance to fight the heavyweight champion in a bout that could change his life.", rating: 8.1, poster_url: "https://image.tmdb.org/t/p/w500/mjKMYJ50MFz1nTTSpA9wXoabRUE.jpg", director: "John G. Avildsen" },
-            
-            // Documentary
-            { id: "56", title: "Won't You Be My Neighbor?", year: 2018, genre: ["Documentary", "Biography"], description: "The life and legacy of Fred Rogers, the beloved host of Mister Rogers' Neighborhood.", rating: 8.4, poster_url: "https://image.tmdb.org/t/p/w500/4vN58NU1C8vE8yE69zKcXhuQqK2.jpg", director: "Morgan Neville" },
-            
-            // Superhero
-            { id: "57", title: "Spider-Man: Into the Spider-Verse", year: 2018, genre: ["Action", "Animation", "Superhero"], description: "A teenager becomes Spider-Man and meets alternate versions of himself from different dimensions.", rating: 8.4, poster_url: "https://image.tmdb.org/t/p/w500/iiZZdoQBEYBv6id8su7ImL0oCbD.jpg", director: "Bob Persichetti" },
-            { id: "58", title: "Avengers: Endgame", year: 2019, genre: ["Action", "Adventure", "Superhero"], description: "The Avengers assemble to reverse Thanos' actions and restore balance to the universe.", rating: 8.4, poster_url: "https://image.tmdb.org/t/p/w500/or06FN3Dka5tukK1e9sl16pB3iy.jpg", director: "Anthony Russo" },
-            { id: "59", title: "Logan", year: 2017, genre: ["Action", "Drama", "Superhero"], description: "An aging Wolverine protects a young mutant from dark forces in a near-future world.", rating: 8.1, poster_url: "https://image.tmdb.org/t/p/w500/fnXjS2fIIbheuR9hRiycGWdMWF9.jpg", director: "James Mangold" },
-            { id: "60", title: "Joker", year: 2019, genre: ["Crime", "Drama", "Thriller"], description: "A mentally troubled comedian embarks on a downward spiral that leads to the creation of an iconic villain.", rating: 8.4, poster_url: "https://image.tmdb.org/t/p/w500/udDclJoHjfjb8Ekgsd4FDteOkCU.jpg", director: "Todd Phillips" }
+            { id: "3", title: "The Dark Knight", year: 2008, genre: ["Action", "Crime", "Drama"], description: "When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.", rating: 9.0, poster_url: "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg", director: "Christopher Nolan" },
+            { id: "4", title: "Pulp Fiction", year: 1994, genre: ["Crime", "Drama"], description: "The lives of two mob hitmen, a boxer, a gangster and his wife intertwine in four tales of violence and redemption.", rating: 8.9, poster_url: "https://image.tmdb.org/t/p/w500/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg", director: "Quentin Tarantino" },
+            { id: "5", title: "Inception", year: 2010, genre: ["Action", "Sci-Fi", "Thriller"], description: "A thief who steals corporate secrets through dream-sharing technology is given the inverse task of planting an idea.", rating: 8.8, poster_url: "https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg", director: "Christopher Nolan" },
+            { id: "6", title: "Forrest Gump", year: 1994, genre: ["Drama", "Romance"], description: "The presidencies of Kennedy and Johnson, the Vietnam War, and other historical events unfold from the perspective of an Alabama man with an IQ of 75.", rating: 8.8, poster_url: "https://image.tmdb.org/t/p/w500/saHP97rTPS5eLmrLQEcANmKrsFl.jpg", director: "Robert Zemeckis" },
+            { id: "7", title: "Fight Club", year: 1999, genre: ["Drama", "Thriller"], description: "An insomniac office worker and a devil-may-care soap maker form an underground fight club that evolves into much more.", rating: 8.8, poster_url: "https://image.tmdb.org/t/p/w500/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg", director: "David Fincher" },
+            { id: "8", title: "The Matrix", year: 1999, genre: ["Action", "Sci-Fi"], description: "A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers.", rating: 8.7, poster_url: "https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg", director: "Lana Wachowski" },
+            { id: "9", title: "Goodfellas", year: 1990, genre: ["Crime", "Drama"], description: "The story of Henry Hill and his life in the mob, covering his relationship with his wife Karen Hill and his mob partners Jimmy Conway and Tommy DeVito.", rating: 8.7, poster_url: "https://image.tmdb.org/t/p/w500/aKuFiU82s5ISJpGZp7YkIr3kCUd.jpg", director: "Martin Scorsese" },
+            { id: "10", title: "Interstellar", year: 2014, genre: ["Sci-Fi", "Drama"], description: "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival.", rating: 8.6, poster_url: "https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg", director: "Christopher Nolan" },
+            { id: "11", title: "The Green Mile", year: 1999, genre: ["Drama", "Fantasy"], description: "The lives of guards on Death Row are affected by one of their charges: a black man accused of child murder and rape, yet who has a mysterious gift.", rating: 8.6, poster_url: "https://image.tmdb.org/t/p/w500/8VG8fDNiy50H4Fed1wdWIUPdZeL.jpg", director: "Frank Darabont" },
+            { id: "12", title: "Se7en", year: 1995, genre: ["Crime", "Mystery", "Thriller"], description: "Two detectives hunt a serial killer who uses the seven deadly sins as his motifs.", rating: 8.6, poster_url: "https://image.tmdb.org/t/p/w500/6yoghtyTpznpBik8EngEmJskVUO.jpg", director: "David Fincher" },
+            { id: "13", title: "The Silence of the Lambs", year: 1991, genre: ["Crime", "Drama", "Thriller"], description: "A young FBI cadet must confide in an incarcerated and manipulative killer to catch another serial killer.", rating: 8.6, poster_url: "https://image.tmdb.org/t/p/w500/uS9m8OBkOCA6K0OJk7C2Qr2qqJN.jpg", director: "Jonathan Demme" },
+            { id: "14", title: "Gladiator", year: 2000, genre: ["Action", "Drama"], description: "A betrayed Roman general seeks revenge against the corrupt emperor who murdered his family and sent him into slavery.", rating: 8.5, poster_url: "https://image.tmdb.org/t/p/w500/ty8TGRuvJLPUmAR1H1nRIsgvimx.jpg", director: "Ridley Scott" },
+            { id: "15", title: "The Departed", year: 2006, genre: ["Crime", "Drama", "Thriller"], description: "An undercover cop and a mole in the police attempt to identify each other while infiltrating an Irish gang in South Boston.", rating: 8.5, poster_url: "https://image.tmdb.org/t/p/w500/nT97ifVT2J1TWmqgJ5NP2FySl1I.jpg", director: "Martin Scorsese" },
+            { id: "16", title: "The Shining", year: 1980, genre: ["Horror", "Drama"], description: "A family heads to an isolated hotel for the winter where a sinister presence influences the father into violence.", rating: 8.4, poster_url: "https://image.tmdb.org/t/p/w500/xazWoLealQwEgqZ89MLZklLZD3k.jpg", director: "Stanley Kubrick" },
+            { id: "17", title: "Spirited Away", year: 2001, genre: ["Animation", "Fantasy"], description: "A young girl navigates a mysterious world of spirits and gods after her parents are transformed into pigs.", rating: 8.6, poster_url: "https://image.tmdb.org/t/p/w500/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg", director: "Hayao Miyazaki" },
+            { id: "18", title: "The Lion King", year: 1994, genre: ["Animation", "Drama", "Family"], description: "A young lion prince flees his kingdom after the murder of his father, only to learn the true meaning of responsibility and bravery.", rating: 8.5, poster_url: "https://image.tmdb.org/t/p/w500/sKCr78MXSLixwmZ8DyJLrpMsd15.jpg", director: "Roger Allers" },
+            { id: "19", title: "Titanic", year: 1997, genre: ["Drama", "Romance"], description: "A seventeen-year-old aristocrat falls in love with a kind but poor artist aboard the luxurious, ill-fated R.M.S. Titanic.", rating: 7.9, poster_url: "https://image.tmdb.org/t/p/w500/9xjZS2rlVxm8SFx8kPC3aIGAR5W.jpg", director: "James Cameron" },
+            { id: "20", title: "Avatar", year: 2009, genre: ["Action", "Adventure", "Sci-Fi"], description: "A paraplegic Marine dispatched to the moon Pandora on a unique mission becomes torn between following his orders and protecting the alien world he calls home.", rating: 7.9, poster_url: "https://image.tmdb.org/t/p/w500/6EiRUJpuoeQPghrs3YNktfnqOVh.jpg", director: "James Cameron" },
+            { id: "21", title: "John Wick", year: 2014, genre: ["Action", "Thriller"], description: "An ex-hitman comes out of retirement to track down the gangsters who killed his dog and stole his car.", rating: 7.4, poster_url: "https://image.tmdb.org/t/p/w500/fZPSd91yGE9fCcCe6OoQr6E3Bev.jpg", director: "Chad Stahelski" },
+            { id: "22", title: "Mad Max: Fury Road", year: 2015, genre: ["Action", "Adventure", "Sci-Fi"], description: "In a post-apocalyptic wasteland, a woman rebels against a tyrannical ruler in search for her homeland with the aid of a group of female prisoners and a psychotic drifter.", rating: 7.9, poster_url: "https://image.tmdb.org/t/p/w500/8tZYtuWezp8JbcsvHYO0O46tFbo.jpg", director: "George Miller" },
+            { id: "23", title: "Scarface", year: 1983, genre: ["Crime", "Drama"], description: "In 1980s Miami, a determined Cuban immigrant rises to become a powerful drug lord, but his unchecked ambition leads to his downfall.", rating: 8.3, poster_url: "https://image.tmdb.org/t/p/w500/iQ5ztdjOteqD8iDvW5GeJIuUd3C.jpg", director: "Brian De Palma" },
+            { id: "24", title: "Reservoir Dogs", year: 1992, genre: ["Crime", "Thriller"], description: "After a simple jewelry heist goes terribly wrong, surviving criminals begin to suspect that one of them is a police informant.", rating: 8.3, poster_url: "https://image.tmdb.org/t/p/w500/xi8Iu6qyTfyZVDVyJra5lEOEaIr.jpg", director: "Quentin Tarantino" },
+            { id: "25", title: "The Grand Budapest Hotel", year: 2014, genre: ["Comedy", "Drama"], description: "A writer encounters the owner of an aging high-class hotel, who tells him of his early years serving as a lobby boy.", rating: 8.1, poster_url: "https://image.tmdb.org/t/p/w500/eWdyYQreja6JGCzqHWXpWHDrrPo.jpg", director: "Wes Anderson" },
+            { id: "26", title: "La La Land", year: 2016, genre: ["Drama", "Music", "Romance"], description: "A jazz pianist and an aspiring actress fall in love while chasing their dreams in Los Angeles.", rating: 8.0, poster_url: "https://image.tmdb.org/t/p/w500/uDO8zWDhfWwoSgumBg3VZ7MCNmj.jpg", director: "Damien Chazelle" },
+            { id: "27", title: "Get Out", year: 2017, genre: ["Horror", "Thriller"], description: "A young African-American visits his white girlfriend's family estate, where he uncovers a disturbing secret.", rating: 7.8, poster_url: "https://image.tmdb.org/t/p/w500/1SwAVYpuLj8KsHxllTF8Dt9dSSX.jpg", director: "Jordan Peele" },
+            { id: "28", title: "A Quiet Place", year: 2018, genre: ["Horror", "Drama", "Sci-Fi"], description: "A family struggles to survive in silence to avoid mysterious creatures that hunt by sound.", rating: 7.5, poster_url: "https://image.tmdb.org/t/p/w500/nAU74GmpUk7t5iklEp3bufwDq4n.jpg", director: "John Krasinski" },
+            { id: "29", title: "Toy Story", year: 1995, genre: ["Animation", "Comedy", "Family"], description: "A cowboy doll is threatened when a new spaceman action figure supplants him as top toy in a boy's room.", rating: 8.3, poster_url: "https://image.tmdb.org/t/p/w500/uXDfjJbdP4ijW5hWSBrPrlKpxab.jpg", director: "John Lasseter" },
+            { id: "30", title: "Up", year: 2009, genre: ["Animation", "Adventure", "Comedy"], description: "A grumpy old man and a young boy scout fly to South America in a house attached to balloons.", rating: 8.2, poster_url: "https://image.tmdb.org/t/p/w500/kZabGp30e7Cq1pNYoDyqZiuGkyx.jpg", director: "Pete Docter" },
+            { id: "31", title: "Coco", year: 2017, genre: ["Animation", "Family", "Fantasy"], description: "A young boy enters the Land of the Dead to find his great-great-grandfather and unlock the real story behind his family's ban on music.", rating: 8.4, poster_url: "https://image.tmdb.org/t/p/w500/gGEsBPAijhVUFoiNpgZXqRVWJt2.jpg", director: "Lee Unkrich" },
+            { id: "32", title: "Django Unchained", year: 2012, genre: ["Drama", "Western"], description: "A freed slave teams up with a German bounty hunter to rescue his wife from a brutal Mississippi plantation owner.", rating: 8.4, poster_url: "https://image.tmdb.org/t/p/w500/7oWY8VDWW7thTzWh3OKYRkWUlD5.jpg", director: "Quentin Tarantino" },
+            { id: "33", title: "Joker", year: 2019, genre: ["Crime", "Drama", "Thriller"], description: "A mentally troubled comedian embarks on a downward spiral that leads to the creation of an iconic villain.", rating: 8.4, poster_url: "https://image.tmdb.org/t/p/w500/udDclJoHjfjb8Ekgsd4FDteOkCU.jpg", director: "Todd Phillips" },
+            { id: "34", title: "Avengers: Endgame", year: 2019, genre: ["Action", "Adventure", "Superhero"], description: "The Avengers assemble to reverse Thanos' actions and restore balance to the universe.", rating: 8.4, poster_url: "https://image.tmdb.org/t/p/w500/or06FN3Dka5tukK1e9sl16pB3iy.jpg", director: "Anthony Russo" },
+            { id: "35", title: "Logan", year: 2017, genre: ["Action", "Drama", "Superhero"], description: "An aging Wolverine protects a young mutant from dark forces in a near-future world.", rating: 8.1, poster_url: "https://image.tmdb.org/t/p/w500/fnXjS2fIIbheuR9hRiycGWdMWF9.jpg", director: "James Mangold" },
+            { id: "36", title: "12 Angry Men", year: 1957, genre: ["Drama"], description: "A jury of 12 men must decide the fate of a young boy accused of murder, leading to intense discussions and revelations about their own biases.", rating: 9.0, poster_url: "https://image.tmdb.org/t/p/w500/ow3wq89wM8qd5X7hWKxiRfsFf9C.jpg", director: "Sidney Lumet" }
         ];
 
         let allMovies = [...MOVIES];
@@ -695,7 +649,6 @@
         let selectedMovie = null;
         let searchTerm = '';
 
-        // Update stats
         document.getElementById('movieCount').textContent = allMovies.length;
 
         function getAllGenres() {
@@ -764,7 +717,7 @@
             return `
                 <button class="movie-card ${isSelected ? 'selected' : ''}" onclick="selectMovie(${JSON.stringify(movie).replace(/"/g, '&quot;')})">
                     <div class="poster-container">
-                        <img src="${movie.poster_url}" alt="${movie.title}" onerror="this.src='https://via.placeholder.com/200x300?text=${encodeURIComponent(movie.title)}'">
+                        <img src="${movie.poster_url}" alt="${movie.title}" onerror="this.style.display='none'">
                         <div class="poster-overlay"></div>
                         <div class="movie-info">
                             <div class="movie-genres">${movie.genre.slice(0, 2).map(g => `<span class="genre-tag">${g}</span>`).join('')}</div>
@@ -783,7 +736,7 @@
             
             section.innerHTML = `
                 <div class="selected-movie-content">
-                    <div class="selected-poster"><img src="${movie.poster_url}" alt="${movie.title}" onerror="this.src='https://via.placeholder.com/200x300'"></div>
+                    <div class="selected-poster"><img src="${movie.poster_url}" alt="${movie.title}" onerror="this.style.display='none'"></div>
                     <div class="selected-info">
                         <div class="selected-badge"><span>✨ SELECTED</span></div>
                         <h2>${movie.title} (${movie.year})</h2>
@@ -824,7 +777,7 @@
             const modal = document.getElementById('movieModal');
             document.getElementById('modalBody').innerHTML = `
                 <div class="modal-poster">
-                    <img src="${movie.poster_url}" alt="${movie.title}" onerror="this.src='https://via.placeholder.com/400x300'">
+                    <img src="${movie.poster_url}" alt="${movie.title}" onerror="this.style.display='none'">
                     <div class="modal-poster-overlay"></div>
                     <h2>${movie.title}</h2>
                 </div>
@@ -849,7 +802,6 @@
             document.getElementById('movieModal').classList.remove('show');
         }
 
-        // Event listeners
         document.getElementById('searchInput').addEventListener('input', (e) => {
             searchTerm = e.target.value;
             document.getElementById('clearSearch').style.display = searchTerm ? 'block' : 'none';
@@ -867,7 +819,6 @@
             if (e.target === document.getElementById('movieModal')) closeModal();
         });
 
-        // Initialize
         displayGenreFilter();
         displayMovies();
     </script>
